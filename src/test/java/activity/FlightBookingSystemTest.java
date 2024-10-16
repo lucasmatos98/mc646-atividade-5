@@ -166,4 +166,70 @@ public class FlightBookingSystemTest {
         assertEquals(0, result.totalPrice, 0.01);
         assertFalse(result.pointsUsed);
     }
+
+    @Test
+    public void testBookingWithJustEnoughSeats() {
+        FlightBookingSystem system = new FlightBookingSystem();
+        LocalDateTime bookingTime = LocalDateTime.now();
+        LocalDateTime departureTime = bookingTime.plusDays(1);
+
+        FlightBookingSystem.BookingResult result = system.bookFlight(
+                3,
+                bookingTime,
+                3,
+                300.0,
+                200,
+                false,
+                departureTime,
+                10
+        );
+
+        assertTrue(result.confirmation);
+    }
+
+    @Test
+    public void testBookingWithAlmostEnoughPassengersForGroupDiscount() {
+        FlightBookingSystem system = new FlightBookingSystem();
+        LocalDateTime bookingTime = LocalDateTime.now();
+        LocalDateTime departureTime = bookingTime.plusDays(1);
+
+        FlightBookingSystem.BookingResult result = system.bookFlight(
+                4,
+                bookingTime,
+                10,
+                300.0,
+                200,
+                false,
+                departureTime,
+                0
+        );
+
+        assertTrue(result.confirmation);
+        assertEquals(300.0 * 4 * 1.6, result.totalPrice);
+        assertEquals(0.0, result.refundAmount);
+        assertFalse(result.pointsUsed);
+    }
+
+    @Test
+    public void testBookingWithJustEnoughTimeForFullRefund() {
+        FlightBookingSystem system = new FlightBookingSystem();
+        LocalDateTime bookingTime = LocalDateTime.now();
+        LocalDateTime departureTime = bookingTime.plusDays(2);
+
+        FlightBookingSystem.BookingResult result = system.bookFlight(
+                1,
+                bookingTime,
+                10,
+                300.0,
+                200,
+                true,
+                departureTime,
+                10
+        );
+
+        assertFalse(result.confirmation);
+        assertEquals(0.0, result.totalPrice);
+        assertEquals((300 * 1.6 - 0.1), result.refundAmount);
+        assertFalse(result.pointsUsed);
+    }
 }

@@ -8,7 +8,6 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SmartEnergyManagementSystemTest {
-
     @Test
     public void testManageEnergy() {
         SmartEnergyManagementSystem smartEnergyManagementSystem = new SmartEnergyManagementSystem();
@@ -225,5 +224,114 @@ public class SmartEnergyManagementSystemTest {
                 energyUsageLimit, totalEnergyUsedToday, scheduledDevices);
 
         assertTrue(result.deviceStatus.get("Device3"));
+    }
+
+    @Test
+    public void testWithPriceRightOnTheThreshold() {
+        SmartEnergyManagementSystem smartEnergyManagementSystem = new SmartEnergyManagementSystem();
+
+        double currentPrice = 10.0;
+        double priceThreshold = 10.0;
+        Map<String, Integer> devicePriorities = new HashMap<>();
+        devicePriorities.put("Device1", 2);
+        devicePriorities.put("Device2", 1);
+        LocalDateTime currentTime = LocalDateTime.now();
+        double currentTemperature = 20.0;
+        double[] desiredTemperatureRange = {18.0, 22.0};
+        double energyUsageLimit = 50.0;
+        double totalEnergyUsedToday = 40.0;
+        List<SmartEnergyManagementSystem.DeviceSchedule> scheduledDevices = new ArrayList<>();
+        scheduledDevices.add(new SmartEnergyManagementSystem.DeviceSchedule("Device3", currentTime));
+
+        SmartEnergyManagementSystem.EnergyManagementResult result = smartEnergyManagementSystem.manageEnergy(
+                currentPrice, priceThreshold, devicePriorities, currentTime, currentTemperature, desiredTemperatureRange,
+                energyUsageLimit, totalEnergyUsedToday, scheduledDevices);
+
+        assertFalse(result.energySavingMode);
+    }
+
+    @Test
+    public void testManageEnergyAtExactly6Hours() {
+        SmartEnergyManagementSystem smartEnergyManagementSystem = new SmartEnergyManagementSystem();
+
+        double currentPrice = 15.0;
+        double priceThreshold = 10.0;
+        Map<String, Integer> devicePriorities = new HashMap<>();
+        devicePriorities.put("Device1", 2);
+        devicePriorities.put("Device2", 1);
+        LocalDateTime currentTime = LocalDateTime.now().withHour(6);
+        double currentTemperature = 20.0;
+        double[] desiredTemperatureRange = {18.0, 22.0};
+        double energyUsageLimit = 50.0;
+        double totalEnergyUsedToday = 40.0;
+        List<SmartEnergyManagementSystem.DeviceSchedule> scheduledDevices = new ArrayList<>();
+        scheduledDevices.add(new SmartEnergyManagementSystem.DeviceSchedule("Device3", currentTime));
+
+        SmartEnergyManagementSystem.EnergyManagementResult result = smartEnergyManagementSystem.manageEnergy(
+                currentPrice, priceThreshold, devicePriorities, currentTime, currentTemperature, desiredTemperatureRange,
+                energyUsageLimit, totalEnergyUsedToday, scheduledDevices);
+
+        assertEquals(false, result.deviceStatus.get("Device1"));
+        assertEquals(true, result.deviceStatus.get("Device2"));
+        assertTrue(result.energySavingMode);
+        assertFalse(result.temperatureRegulationActive);
+    }
+
+    @Test
+    public void testManageEnergyJustCoolEnough() {
+        SmartEnergyManagementSystem smartEnergyManagementSystem = new SmartEnergyManagementSystem();
+
+        double currentPrice = 15.0;
+        double priceThreshold = 10.0;
+        Map<String, Integer> devicePriorities = new HashMap<>();
+        devicePriorities.put("Device1", 2);
+        devicePriorities.put("Device2", 1);
+        LocalDateTime currentTime = LocalDateTime.now();
+        double currentTemperature = 18.0;
+        double[] desiredTemperatureRange = {18.0, 22.0};
+        double energyUsageLimit = 50.0;
+        double totalEnergyUsedToday = 40.0;
+        List<SmartEnergyManagementSystem.DeviceSchedule> scheduledDevices = new ArrayList<>();
+        scheduledDevices.add(new SmartEnergyManagementSystem.DeviceSchedule("Device3", currentTime));
+
+        SmartEnergyManagementSystem.EnergyManagementResult result = smartEnergyManagementSystem.manageEnergy(
+                currentPrice, priceThreshold, devicePriorities, currentTime, currentTemperature, desiredTemperatureRange,
+                energyUsageLimit, totalEnergyUsedToday, scheduledDevices);
+
+        assertEquals(false, result.deviceStatus.get("Device1"));
+        assertEquals(true, result.deviceStatus.get("Device2"));
+        assertFalse(result.deviceStatus.get("Heating"));
+        assertFalse(result.deviceStatus.get("Cooling"));
+        assertTrue(result.energySavingMode);
+        assertFalse(result.temperatureRegulationActive);
+    }
+
+    @Test
+    public void testManageEnergyJustHotEnough() {
+        SmartEnergyManagementSystem smartEnergyManagementSystem = new SmartEnergyManagementSystem();
+
+        double currentPrice = 15.0;
+        double priceThreshold = 10.0;
+        Map<String, Integer> devicePriorities = new HashMap<>();
+        devicePriorities.put("Device1", 2);
+        devicePriorities.put("Device2", 1);
+        LocalDateTime currentTime = LocalDateTime.now();
+        double currentTemperature = 22.0;
+        double[] desiredTemperatureRange = {18.0, 22.0};
+        double energyUsageLimit = 50.0;
+        double totalEnergyUsedToday = 40.0;
+        List<SmartEnergyManagementSystem.DeviceSchedule> scheduledDevices = new ArrayList<>();
+        scheduledDevices.add(new SmartEnergyManagementSystem.DeviceSchedule("Device3", currentTime));
+
+        SmartEnergyManagementSystem.EnergyManagementResult result = smartEnergyManagementSystem.manageEnergy(
+                currentPrice, priceThreshold, devicePriorities, currentTime, currentTemperature, desiredTemperatureRange,
+                energyUsageLimit, totalEnergyUsedToday, scheduledDevices);
+
+        assertEquals(false, result.deviceStatus.get("Device1"));
+        assertEquals(true, result.deviceStatus.get("Device2"));
+        assertFalse(result.deviceStatus.get("Heating"));
+        assertFalse(result.deviceStatus.get("Cooling"));
+        assertTrue(result.energySavingMode);
+        assertFalse(result.temperatureRegulationActive);
     }
 }

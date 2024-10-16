@@ -94,4 +94,52 @@ public class FraudDetectionSystemTest {
         assertFalse(result.verificationRequired);
         assertEquals(0, result.riskScore);
     }
+
+    @Test
+    public void testWithJustEnoughTransactionAmount() {
+        System.out.println("Running testWithJustEnoughTransactionAmount");
+        FraudDetectionSystem system = new FraudDetectionSystem();
+
+        FraudDetectionSystem.Transaction transaction = new FraudDetectionSystem.Transaction(10000, LocalDateTime.now(), "NYC");
+        FraudDetectionSystem.FraudCheckResult result = system.checkForFraud(transaction, Collections.emptyList(), Collections.emptyList());
+
+        assertFalse(result.isFraudulent);
+    }
+
+    @Test
+    public void testWithJustEnoughRecentTransactionCount() {
+        LocalDateTime now = LocalDateTime.now();
+        List<FraudDetectionSystem.Transaction> previousTransactions = Arrays.asList(
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(10), "NYC"),
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(20), "NYC"),
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(30), "NYC"),
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(40), "NYC"),
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(50), "NYC"),
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(55), "NYC"),
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(56), "NYC"),
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(57), "NYC"),
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(58), "NYC"),
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(59), "NYC")
+        );
+        System.out.println("Running testNormalTransaction");
+        FraudDetectionSystem system = new FraudDetectionSystem();
+        FraudDetectionSystem.Transaction transaction = new FraudDetectionSystem.Transaction(100, LocalDateTime.now(), "NYC");
+        FraudDetectionSystem.FraudCheckResult result = system.checkForFraud(transaction, previousTransactions, Collections.emptyList());
+
+        assertFalse(result.isBlocked);
+    }
+
+    @Test
+    public void testLocationChangeWithinJustEnoughTimeFrame() {
+        System.out.println("Running testLocationChangeWithinShortTimeFrame");
+        FraudDetectionSystem system = new FraudDetectionSystem();
+        LocalDateTime now = LocalDateTime.now();
+        List<FraudDetectionSystem.Transaction> previousTransactions = Collections.singletonList(
+                new FraudDetectionSystem.Transaction(100, now.minusMinutes(30), "NYC")
+        );
+        FraudDetectionSystem.Transaction transaction = new FraudDetectionSystem.Transaction(100, now, "LA");
+        FraudDetectionSystem.FraudCheckResult result = system.checkForFraud(transaction, previousTransactions, Collections.emptyList());
+
+        assertFalse(result.isFraudulent);
+    }
 }
